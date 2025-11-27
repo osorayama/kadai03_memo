@@ -1,0 +1,68 @@
+body {
+    --main-font: 'Poppins', sans-serif;
+    --main-bg: linear-gradient(to bottom, #E6F4EA, #DFFFE0);
+    --main-color: #4B5563;
+    --main-font-size: 14px;
+    font-family: var(--main-font);
+    background: var(--main-bg);
+    color: var(--main-color);
+    font-size: var(--main-font-size);
+}
+
+header {
+    --header-bg: linear-gradient(to right, #A7F3D0, #6EE7B7);
+    --header-color: #1F2937;
+    --header-padding: 0.25rem 0;
+    --header-font-size: 0.9rem;
+    background: var(--header-bg);
+    color: var(--header-color);
+    padding: var(--header-padding);
+    font-size: var(--header-font-size);
+}
+
+.rounded {
+    border-radius: 0.5rem;
+}
+
+.badge {
+    border-radius: 0.5rem;
+    font-size: 0.65rem;
+}
+
+button {
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+#status-area, #japan-map-area, #add-mountain-area, #mountain-list-area {
+    padding: 1rem;
+}
+
+#japan-map {
+    --japan-map-max-width: 48rem;
+    --japan-map-min-width: 32rem;
+    --japan-map-aspect: 2.5/1;
+    max-width: var(--japan-map-max-width);
+    min-width: var(--japan-map-min-width);
+    width: 100%;
+    aspect-ratio: var(--japan-map-aspect);
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    gap: 0.25rem;
+    margin-top: 1rem;
+}
+
+#japan-map button {
+    --pref-btn-size: 2.5rem;
+    --pref-btn-font-size: 0.85rem;
+    min-width: var(--pref-btn-size);
+    min-height: var(--pref-btn-size);
+    font-size: var(--pref-btn-font-size);
+    padding: 0.2rem 0.1rem;
+    box-sizing: border-box;
+}
