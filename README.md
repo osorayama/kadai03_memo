@@ -7,7 +7,7 @@
 - 都道府県ごとの達成状況を日本地図で可視化。
 
 ## ③アプリのデプロイURL
-
+https://osorayama.github.io/kadai03_memo/
 
 ## ④アプリのログイン用IDまたはPassword（ある場合）
 - ログイン不要
