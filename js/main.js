@@ -1,74 +1,94 @@
 import { PREFECTURES_DATA as PREFECTURES } from "./prefectures.js";
 
-// --- 定数 ---
-const FUJI_ELEVATION = 3776; // 富士山標高[m]
-const STRATOSPHERE_HEIGHT = 12000; // 成層圏[m]
-const MESOSPHERE_HEIGHT = 50000;   // 中間圏[m]
-const THERMOSPHERE_HEIGHT = 80000; // 熱圏[m]
-const MAX_HEIGHT = 700000;         // 熱圏上限[m]
+// アプリの主要定数（標高と到達判定）
+const FUJI_ELEVATION = 3776;
+const STRATOSPHERE_HEIGHT = 12000;
+const MESOSPHERE_HEIGHT = 50000;
+const THERMOSPHERE_HEIGHT = 80000;
+const MAX_HEIGHT = THERMOSPHERE_HEIGHT;
 const DEFAULT_PREFECTURE_OPTION = '<option value="">都道府県（必須）</option>';
-const DELETE_CONFIRM_MESSAGE = "本当に全て削除しますか？";
+
+// ランク名（表示テキスト）
+const RANK = {
+  THERMOSPHERE: "熱圏チャレンジャー",
+  MESOSPHERE: "中間圏アドベンチャー",
+  STRATOSPHERE: "成層圏ブレイカー",
+  FUJI3: "富士山3回クリア！成層圏到達",
+  FUJI1: "富士山登頂クラス",
+  GROUND: "地上民"
+};
 
 let mountains = [];
 let selectedPrefecture = null;
 
-function loadMountains() {
+// ローカルストレージ入出力
+const loadMountains = () => {
   const data = localStorage.getItem("mountains");
   return data ? JSON.parse(data) : [];
-}
-function saveMountains(list) {
+};
+const saveMountains = (list) => {
   localStorage.setItem("mountains", JSON.stringify(list));
-}
+};
 
+// 都道府県コード単位で登頂数・標高合計を集計
 function aggregateByPref(list, PREFS) {
   const result = {};
   PREFS.forEach(pref => {
     result[pref.code] = { climbedCount: 0, totalElevation: 0 };
   });
   list.forEach(m => {
-    if (m.status === "climbed") {
-      const pref = PREFS.find(p => p.name === m.prefecture);
-      if (pref) {
-        result[pref.code].climbedCount++;
-        result[pref.code].totalElevation += Number(m.elevation);
-      }
-    }
+    if (m.status !== "climbed") return;
+    const pref = PREFS.find(p => p.name === m.prefecture);
+    if (!pref) return;
+    result[pref.code].climbedCount++;
+    result[pref.code].totalElevation += Number(m.elevation);
   });
   return result;
 }
 
+// 累計標高に応じたランク名を返す
 function getRankByElevation(totalElevation) {
-  if (totalElevation >= THERMOSPHERE_HEIGHT) return "熱圏チャレンジャー";
-  if (totalElevation >= MESOSPHERE_HEIGHT) return "中間圏アドベンチャー";
-  if (totalElevation >= STRATOSPHERE_HEIGHT) return "成層圏ブレイカー";
-  if (totalElevation >= FUJI_ELEVATION * 3) return "富士山3回クリア！成層圏到達";
-  if (totalElevation >= FUJI_ELEVATION) return "富士山登頂クラス";
-  return "地上民";
+  if (totalElevation >= THERMOSPHERE_HEIGHT) return RANK.THERMOSPHERE;
+  if (totalElevation >= MESOSPHERE_HEIGHT) return RANK.MESOSPHERE;
+  if (totalElevation >= STRATOSPHERE_HEIGHT) return RANK.STRATOSPHERE;
+  if (totalElevation >= FUJI_ELEVATION * 3) return RANK.FUJI3;
+  if (totalElevation >= FUJI_ELEVATION) return RANK.FUJI1;
+  return RANK.GROUND;
 }
 
+// ヘッダーの統計と進捗バーを更新
 function updateStats(list) {
   const climbed = list.filter(m => m.status === "climbed");
   const climbedCount = climbed.length;
   const totalElevation = climbed.reduce((sum, m) => sum + Number(m.elevation), 0);
   const fujiCount = totalElevation / FUJI_ELEVATION;
-  const percent = totalElevation / MAX_HEIGHT * 100;
+  const percent = (totalElevation / MAX_HEIGHT) * 100;
   const percentText = percent < 0.01 && percent > 0 ? "<0.01%" : percent.toFixed(2) + "%";
   const currentKm = Math.floor(totalElevation / 1000);
-  const remainKm = Math.max(0, Math.floor((STRATOSPHERE_HEIGHT - totalElevation) / 1000));
+  const remainKm = Math.max(0, Math.floor((THERMOSPHERE_HEIGHT - totalElevation) / 1000));
   const rank = getRankByElevation(totalElevation);
 
   $("#climbed-count").text(climbedCount);
   $("#total-elevation").text(totalElevation);
   $("#fuji-count").text(fujiCount.toFixed(2));
-  $("#space-rank").text(rank)
+  $("#space-rank")
+    .text(rank)
     .removeClass()
-    .addClass("font-bold badge px-2 py-1 rounded " +
-      (rank === "熱圏チャレンジャー" ? "bg-gradient-to-r from-blue-400 via-purple-400 to-green-200 text-slate-900" :
-      rank === "中間圏アドベンチャー" ? "bg-blue-400 text-slate-900" :
-      rank === "成層圏ブレイカー" ? "bg-sky-300 text-slate-900" :
-      rank === "富士山3回クリア！成層圏到達" ? "bg-emerald-400 text-slate-900" :
-      rank === "富士山登頂クラス" ? "bg-emerald-300 text-slate-900" :
-      "bg-slate-600 text-slate-100"));
+    .addClass(
+      "font-bold badge px-2 py-1 rounded " +
+        (rank === RANK.THERMOSPHERE
+          ? "bg-gradient-to-r from-blue-400 via-purple-400 to-green-200 text-slate-900"
+          : rank === RANK.MESOSPHERE
+          ? "bg-blue-400 text-slate-900"
+          : rank === RANK.STRATOSPHERE
+          ? "bg-sky-300 text-slate-900"
+          : rank === RANK.FUJI3
+          ? "bg-emerald-400 text-slate-900"
+          : rank === RANK.FUJI1
+          ? "bg-emerald-300 text-slate-900"
+          : "bg-slate-600 text-slate-100")
+    );
+
   $("#progress-bar").css("width", Math.min(100, percent) + "%");
   let barColor = "bg-green-400";
   if (totalElevation >= THERMOSPHERE_HEIGHT) barColor = "bg-gradient-to-r from-blue-400 via-purple-400 to-green-200";
@@ -81,37 +101,38 @@ function updateStats(list) {
   $("#remain-km").text(remainKm);
 }
 
+// 日本地図ボタンを都道府県データから再描画
 function renderJapanMap(list) {
-	const agg = aggregateByPref(list, PREFECTURES);
-	const $map = $("#japan-map");
-	$map.empty();
-	PREFECTURES.forEach(pref => {
-		const { climbedCount, totalElevation } = agg[pref.code];
-		let color = "bg-slate-700";
-		let textColor = "text-slate-100";
-		if (totalElevation >= 3000) {
-			color = "bg-emerald-500/80"; textColor = "text-slate-900";
-		} else if (totalElevation >= 1000) {
-			color = "bg-emerald-700/70";
-		} else if (totalElevation >= 1) {
-			color = "bg-emerald-900/70";
-		}
-		const isSelected = selectedPrefecture && selectedPrefecture.code === pref.code;
-		const ring = isSelected ? "ring-2 ring-cyan-400" : "ring-1 ring-slate-600";
-		const isOverseas = pref.code === "overseas";
-		const btn = $(
-			`<button class="${color} ${textColor} ${ring} rounded flex items-center justify-center text-xs font-bold transition ${isOverseas ? 'w-full h-10' : 'w-full h-full'} min-h-[2.5rem] min-w-[2.5rem]" style="${isOverseas ? '' : `grid-row:${pref.row};grid-column:${pref.col};`}" data-code="${pref.code}">${pref.name}</button>`
-		);
-		btn.on("click", function() {
-			selectedPrefecture = pref;
-			renderJapanMap(mountains);
-			renderMountains(mountains, selectedPrefecture);
-		});
-		$map.append(btn);
-	});
+  const agg = aggregateByPref(list, PREFECTURES);
+  const $map = $("#japan-map");
+  $map.empty();
+  PREFECTURES.forEach(pref => {
+    const { totalElevation } = agg[pref.code];
+    let color = "bg-slate-700";
+    let textColor = "text-slate-100";
+    if (totalElevation >= 3000) {
+      color = "bg-emerald-500/80"; textColor = "text-slate-900";
+    } else if (totalElevation >= 1000) {
+      color = "bg-emerald-700/70";
+    } else if (totalElevation >= 1) {
+      color = "bg-emerald-900/70";
+    }
+    const isSelected = selectedPrefecture && selectedPrefecture.code === pref.code;
+    const ring = isSelected ? "ring-2 ring-cyan-400" : "ring-1 ring-slate-600";
+    const isOverseas = pref.code === "overseas";
+    const btn = $(
+      `<button class="${color} ${textColor} ${ring} rounded flex items-center justify-center text-xs font-bold transition ${isOverseas ? 'w-full h-10' : 'w-full h-full'} min-h-[2.5rem] min-w-[2.5rem]" style="${isOverseas ? '' : `grid-row:${pref.row};grid-column:${pref.col};`}" data-code="${pref.code}">${pref.name}</button>`
+    );
+    btn.on("click", function() {
+      selectedPrefecture = pref;
+      renderJapanMap(mountains);
+      renderMountains(mountains, selectedPrefecture);
+    });
+    $map.append(btn);
+  });
 }
 
-// --- ユーティリティ関数 ---
+// ステータス表示用バッジHTML
 function createBadge(status) {
   return status === "climbed"
     ? '<span class="badge bg-emerald-400 text-slate-900 px-2 py-1 rounded">登った</span>'
@@ -122,7 +143,7 @@ function resetForm($form) {
   $form[0].reset();
 }
 
-// --- 都道府県セレクト描画 ---
+// 都道府県セレクトボックスを描画
 function renderPrefSelect() {
 	const $sel = $("#mountain-pref");
 	$sel.empty();
@@ -132,7 +153,7 @@ function renderPrefSelect() {
 	});
 }
 
-// --- 山リスト描画 ---
+// 選択都道府県の山リストを描画
 function renderMountains(list, selectedPref) {
   const $list = $("#mountain-list");
   $list.empty();
@@ -172,41 +193,42 @@ function renderMountains(list, selectedPref) {
   });
 }
 
+// 初期化とフォーム送信ハンドラ
 $(function() {
-	mountains = loadMountains();
-	renderPrefSelect();
-	renderJapanMap(mountains);
-	updateStats(mountains);
-	renderMountains(mountains, selectedPrefecture);
+  mountains = loadMountains();
+  renderPrefSelect();
+  renderJapanMap(mountains);
+  updateStats(mountains);
+  renderMountains(mountains, selectedPrefecture);
 
-	$("#add-mountain-form").on("submit", function(e) {
-		e.preventDefault();
-		const name = $("#mountain-name").val().trim();
-		const prefecture = $("#mountain-pref").val();
-		const elevation = Number($("#mountain-elevation").val());
-		const date = $("#mountain-date").val();
-		const weather = $("#mountain-weather").val();
-		const status = $("input[name='mountain-status']:checked").val();
-		const memo = $("#mountain-memo").val().trim();
-		if (!name || !prefecture || !elevation) return;
-		const prefObj = PREFECTURES.find(p => p.name === prefecture);
-		if (!prefObj) return;
-		const newMountain = {
-			id: Date.now(),
-			name,
-			prefecture,
-			region: prefObj.region,
-			elevation,
-			date,
-			weather,
-			status,
-			memo
-		};
-		mountains.push(newMountain);
-		saveMountains(mountains);
-		renderJapanMap(mountains);
-		renderMountains(mountains, selectedPrefecture);
-		updateStats(mountains);
-		resetForm($(this));
-	});
+  $("#add-mountain-form").on("submit", function(e) {
+    e.preventDefault();
+    const name = $("#mountain-name").val().trim();
+    const prefecture = $("#mountain-pref").val();
+    const elevation = Number($("#mountain-elevation").val());
+    const date = $("#mountain-date").val();
+    const weather = $("#mountain-weather").val();
+    const status = $("input[name='mountain-status']:checked").val();
+    const memo = $("#mountain-memo").val().trim();
+    if (!name || !prefecture || !elevation) return;
+    const prefObj = PREFECTURES.find(p => p.name === prefecture);
+    if (!prefObj) return;
+    const newMountain = {
+      id: Date.now(),
+      name,
+      prefecture,
+      region: prefObj.region,
+      elevation,
+      date,
+      weather,
+      status,
+      memo
+    };
+    mountains.push(newMountain);
+    saveMountains(mountains);
+    renderJapanMap(mountains);
+    renderMountains(mountains, selectedPrefecture);
+    updateStats(mountains);
+    resetForm($(this));
+  });
 });

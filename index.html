@@ -4,8 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>登山ログ</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                safelist: [
+                    // 背景色・グラデーション
+                    'bg-green-100','bg-green-200','bg-green-300','bg-green-400','bg-emerald-300','bg-emerald-400',
+                    'bg-emerald-500/80','bg-emerald-700/70','bg-emerald-900/70','bg-sky-300','bg-blue-400','bg-slate-600','bg-slate-700',
+                    'bg-gradient-to-r','from-blue-400','via-purple-400','to-green-200',
+                    // 文字色
+                    'text-white','text-slate-900','text-slate-100','text-green-800','text-green-900','text-slate-400','text-slate-100',
+                    // 枠線・リング
+                    'ring-1','ring-2','ring-cyan-400','ring-slate-600',
+                    // レイアウト補助
+                    'rounded','shadow','shadow-sm','transition','transition-all','aspect-square',
+                    // ボタン・配置
+                    'flex','items-center','justify-center','text-xs','font-bold','w-full','h-full','h-10','min-h-[2.5rem]','min-w-[2.5rem]'
+                ]
+            }
+        </script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
     <!-- jQuery CDN -->
@@ -14,18 +31,14 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- ヘッダー -->
     <header class="py-4 shadow">
         <div class="container mx-auto px-4">
             <h1 class="text-3xl md:text-4xl font-bold">登山ログ 〜成層圏突破チャレンジ〜</h1>
         </div>
     </header>
 
-    <!-- メインエリア -->
     <main class="container mx-auto px-2 md:px-6 py-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- 左: 日本地図 -->
         <section class="md:col-span-2">
-            <!-- ステータスエリア -->
             <div id="status-area" class="mb-6 p-4 rounded bg-green-100 shadow flex flex-col md:flex-row md:items-center gap-4">
                 <div class="flex-1 flex flex-col gap-2">
                     <div class="flex gap-4 flex-wrap">
@@ -37,7 +50,7 @@
                     <div class="w-full mt-2">
                         <div class="flex justify-between text-xs mb-1">
                             <span>地上</span>
-                            <span>成層圏(12km)</span>
+                            <span class="strato-label">成層圏(12km)</span>
                             <span>中間圏(50km)</span>
                             <span>熱圏(80km〜)</span>
                         </div>
@@ -48,20 +61,17 @@
                             <span id="progress-percent">0.00%</span>
                         </div>
                         <div class="text-sm mt-1">
-                            現在高度：<span id="current-km">0</span> km / 成層圏まであと <span id="remain-km">12</span> km
+                            現在高度：<span id="current-km">0</span> km / 熱圏まであと <span id="remain-km">80</span> km
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- 日本地図エリア -->
             <div id="japan-map-area" class="bg-green-100 rounded p-4 shadow">
                 <div id="japan-map" class="grid grid-cols-8 grid-rows-8 gap-1 w-full aspect-square max-w-2xl mx-auto"></div>
             </div>
         </section>
 
-        <!-- 右: 山追加フォーム & 山リスト -->
         <aside class="md:col-span-1 flex flex-col gap-6">
-            <!-- 山追加フォーム -->
             <div id="add-mountain-area" class="bg-green-100 rounded p-4 shadow">
                 <h2 class="text-lg font-bold mb-2">山を追加</h2>
                 <form id="add-mountain-form" class="flex flex-col gap-2">
@@ -85,7 +95,6 @@
                     <button type="submit" class="mt-2 bg-green-400 hover:bg-green-300 text-white font-bold py-2 rounded transition">追加する</button>
                 </form>
             </div>
-            <!-- 山リスト -->
             <div id="mountain-list-area" class="bg-green-100 rounded p-4 shadow flex-1">
                 <h2 class="text-lg font-bold mb-2">山リスト</h2>
                 <ul id="mountain-list" class="space-y-2"></ul>

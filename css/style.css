@@ -43,13 +43,10 @@ button:hover {
 }
 
 #japan-map {
-    --japan-map-max-width: 48rem;
-    --japan-map-min-width: 32rem;
-    --japan-map-aspect: 2.5/1;
-    max-width: var(--japan-map-max-width);
-    min-width: var(--japan-map-min-width);
+    max-width: 48rem;
+    min-width: 32rem;
+    aspect-ratio: 2.5/1;
     width: 100%;
-    aspect-ratio: var(--japan-map-aspect);
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     grid-template-rows: repeat(8, 1fr);
@@ -58,11 +55,14 @@ button:hover {
 }
 
 #japan-map button {
-    --pref-btn-size: 2.5rem;
-    --pref-btn-font-size: 0.85rem;
-    min-width: var(--pref-btn-size);
-    min-height: var(--pref-btn-size);
-    font-size: var(--pref-btn-font-size);
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    font-size: 0.85rem;
     padding: 0.2rem 0.1rem;
     box-sizing: border-box;
+}
+
+.strato-label {
+    position: relative;
+    left: -60px;
 }
